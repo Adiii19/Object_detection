@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mlkit_object_detection/google_mlkit_object_detection.dart';
 import 'package:image_picker/image_picker.dart';
 
 void main() {
@@ -21,6 +22,8 @@ class _MyHomePageState extends State<MyHomePage> {
   var image;
   //TODO declare detector
 
+  dynamic objectDetector;
+
   @override
   void initState() {
     // TODO: implement initState
@@ -28,10 +31,18 @@ class _MyHomePageState extends State<MyHomePage> {
     imagePicker = ImagePicker();
     //TODO initialize detector
 
+const mode =  DetectionMode.single;
+
+    // Options to configure the detector while using with base model.
+final options = ObjectDetectorOptions(mode: mode,classifyObjects:true ,multipleObjects: true);
+
+objectDetector = ObjectDetector(options: options);
+
   }
 
   @override
   void dispose() {
+     objectDetector.close();
     super.dispose();
 
   }
@@ -57,6 +68,21 @@ class _MyHomePageState extends State<MyHomePage> {
 
   //TODO face detection code here
   doObjectDetection() async {
+     InputImage inputImage=InputImage.fromFile(_image!);
+
+    final List<DetectedObject> objects = await objectDetector.processImage(inputImage);
+
+for(DetectedObject detectedObject in objects){
+  final rect = detectedObject.boundingBox;
+  final trackingId = detectedObject.trackingId;
+
+  for(Label label in detectedObject.labels){
+    print('${label.text} ${label.confidence}');
+  }
+
+
+}
+    
     setState(() {
       _image;
     });
@@ -99,7 +125,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         onPressed: _imgFromGallery,
                         onLongPress: _imgFromCamera,
                         style: ElevatedButton.styleFrom(
-                            primary: Colors.transparent,
+                            backgroundColor: Colors.transparent,
                             shadowColor: Colors.transparent),
                         child:
                         Container(
